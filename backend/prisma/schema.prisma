@@ -1,0 +1,652 @@
+// ─────────────────────────────────────────────────────────────
+// Astamami Care Alliance — Prisma Schema
+// Database: PostgreSQL
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum CaregiverStatus {
+  PENDING_VERIFICATION
+  UNDER_REVIEW
+  ACTIVE
+  ON_LEAVE
+  TEMPORARILY_UNAVAILABLE
+  SUSPENDED
+  INACTIVE
+}
+
+enum BookingStatus {
+  DRAFT
+  REQUESTED
+  PENDING_REVIEW
+  AWAITING_PAYMENT
+  CONFIRMED
+  CAREGIVER_ASSIGNMENT_PENDING
+  CAREGIVER_ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+enum DurationType {
+  HOURLY
+  DAILY
+  WEEKLY
+  MONTHLY
+  CUSTOM
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+  OVERDUE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum NotificationChannel {
+  EMAIL
+  IN_APP
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+enum ShiftStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  MISSED
+}
+
+enum DocumentType {
+  NATIONAL_ID
+  QUALIFICATION
+  CERTIFICATION
+  CONTRACT
+  REFERENCE
+  OTHER
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  ASSIGN
+  APPROVE
+  REJECT
+  PAYMENT
+  DOWNLOAD
+}
+
+// ─── USERS & ROLES ────────────────────────────────────────────
+
+model User {
+  id               String     @id @default(cuid())
+  email            String     @unique
+  passwordHash     String
+  phone            String?
+  isActive         Boolean    @default(true)
+  isEmailVerified  Boolean    @default(false)
+  mfaEnabled       Boolean    @default(false)
+  mfaSecret        String?
+  status           UserStatus @default(ACTIVE)
+  lastLoginAt      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  // Relations
+  roles            UserRole[]
+  client           Client?
+  caregiver        Caregiver?
+  refreshTokens    RefreshToken[]
+  notifications    Notification[]
+  sentMessages     Message[]       @relation("SentMessages")
+  receivedMessages Message[]       @relation("ReceivedMessages")
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  resource    String
+  action      String
+  description String?
+  createdAt   DateTime @default(now())
+
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  userId    String
+  roleId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+// ─── CLIENTS ──────────────────────────────────────────────────
+
+model Client {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName               String
+  dateOfBirth            DateTime?
+  gender                 String?
+  phone                  String?
+  email                  String?
+  address                String?
+  city                   String?
+  emergencyContactName   String?
+  emergencyContactPhone  String?
+  preferredContact       String?
+  serviceLocation        String?
+  careRequirements       String?
+  specialInstructions    String?
+  notes                  String?
+  isActive               Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Relations
+  familyMembers          FamilyMember[]
+  bookings               Booking[]
+  carePlans              CarePlan[]
+  documents              ClientDocument[]
+  invoices               Invoice[]
+
+  @@map("clients")
+}
+
+model FamilyMember {
+  id           String  @id @default(cuid())
+  clientId     String
+  client       Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  fullName     String
+  relationship String
+  phone        String?
+  email        String?
+  isAuthorized Boolean @default(false)
+  createdAt    DateTime @default(now())
+
+  @@map("family_members")
+}
+
+// ─── CAREGIVERS ───────────────────────────────────────────────
+
+model Caregiver {
+  id                 String          @id @default(cuid())
+  userId             String          @unique
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName           String
+  photoUrl           String?
+  phone              String?
+  email              String?
+  address            String?
+  city               String?
+  emergencyContact   String?
+  professionalRole   String
+  qualifications     String?
+  experienceYears    Int             @default(0)
+  skills             String[]
+  languages          String[]
+  serviceAreas       String[]
+  employmentStatus   String          @default("FULL_TIME")
+  verificationStatus CaregiverStatus @default(PENDING_VERIFICATION)
+  verifiedAt         DateTime?
+  verifiedBy         String?
+  notes              String?
+  isActive           Boolean         @default(true)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  // Relations
+  documents          CaregiverDocument[]
+  availability       CaregiverAvailability[]
+  assignments        CareAssignment[]
+  shifts             Shift[]
+  careNotes          CareNote[]
+  incidents          Incident[]
+
+  @@map("caregivers")
+}
+
+model CaregiverDocument {
+  id           String       @id @default(cuid())
+  caregiverId  String
+  caregiver    Caregiver    @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  documentType DocumentType
+  fileUrl      String
+  fileName     String
+  fileSize     Int?
+  isVerified   Boolean      @default(false)
+  expiryDate   DateTime?
+  uploadedAt   DateTime     @default(now())
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  notes        String?
+
+  @@map("caregiver_documents")
+}
+
+model ClientDocument {
+  id           String       @id @default(cuid())
+  clientId     String
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  documentType DocumentType
+  fileUrl      String
+  fileName     String
+  fileSize     Int?
+  uploadedAt   DateTime     @default(now())
+  notes        String?
+
+  @@map("client_documents")
+}
+
+model CaregiverAvailability {
+  id          String    @id @default(cuid())
+  caregiverId String
+  caregiver   Caregiver @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int       // 0=Sunday, 6=Saturday
+  startTime   String    // "08:00"
+  endTime     String    // "17:00"
+  isAvailable Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@map("caregiver_availability")
+}
+
+// ─── SERVICES ─────────────────────────────────────────────────
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  packages    ServicePackage[]
+
+  @@map("services")
+}
+
+model ServicePackage {
+  id          String   @id @default(cuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  features    String[]
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pricing     Pricing[]
+  bookingItems BookingItem[]
+
+  @@map("service_packages")
+}
+
+model Pricing {
+  id             String       @id @default(cuid())
+  packageId      String
+  package        ServicePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  durationType   DurationType
+  unitPrice      Decimal      @db.Decimal(10, 2)
+  currency       String       @default("ETB")
+  discountAmount Decimal?     @db.Decimal(10, 2)
+  taxRate        Decimal?     @db.Decimal(5, 2)
+  effectiveFrom  DateTime     @default(now())
+  effectiveTo    DateTime?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+
+  @@map("pricing")
+}
+
+// ─── BOOKINGS ─────────────────────────────────────────────────
+
+model Booking {
+  id              String        @id @default(cuid())
+  referenceNumber String        @unique
+  clientId        String
+  client          Client        @relation(fields: [clientId], references: [id])
+  status          BookingStatus @default(REQUESTED)
+  startDate       DateTime
+  endDate         DateTime?
+  durationType    DurationType
+  serviceLocation String?
+  notes           String?
+  cancellationReason String?
+  createdBy       String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  items           BookingItem[]
+  assignments     CareAssignment[]
+  shifts          Shift[]
+  carePlans       CarePlan[]
+  careNotes       CareNote[]
+  incidents       Incident[]
+  invoice         Invoice?
+
+  @@map("bookings")
+}
+
+model BookingItem {
+  id           String         @id @default(cuid())
+  bookingId    String
+  booking      Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  packageId    String
+  package      ServicePackage @relation(fields: [packageId], references: [id])
+  durationType DurationType
+  quantity     Decimal        @db.Decimal(10, 2)
+  unitPrice    Decimal        @db.Decimal(10, 2)
+  totalPrice   Decimal        @db.Decimal(10, 2)
+  currency     String         @default("ETB")
+  createdAt    DateTime       @default(now())
+
+  @@map("booking_items")
+}
+
+// ─── ASSIGNMENTS & SCHEDULING ─────────────────────────────────
+
+model CareAssignment {
+  id          String    @id @default(cuid())
+  bookingId   String
+  booking     Booking   @relation(fields: [bookingId], references: [id])
+  caregiverId String
+  caregiver   Caregiver @relation(fields: [caregiverId], references: [id])
+  assignedBy  String?
+  assignedAt  DateTime  @default(now())
+  startDate   DateTime
+  endDate     DateTime?
+  notes       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@map("care_assignments")
+}
+
+model Shift {
+  id            String      @id @default(cuid())
+  caregiverId   String
+  caregiver     Caregiver   @relation(fields: [caregiverId], references: [id])
+  bookingId     String?
+  booking       Booking?    @relation(fields: [bookingId], references: [id])
+  status        ShiftStatus @default(SCHEDULED)
+  startDatetime DateTime
+  endDatetime   DateTime
+  location      String?
+  checkInAt     DateTime?
+  checkOutAt    DateTime?
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("shifts")
+}
+
+// ─── CARE PLANS ───────────────────────────────────────────────
+
+model CarePlan {
+  id            String   @id @default(cuid())
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id])
+  bookingId     String?
+  booking       Booking? @relation(fields: [bookingId], references: [id])
+  version       Int      @default(1)
+  objectives    String?
+  instructions  String?
+  emergencyInfo String?
+  startDate     DateTime
+  reviewDate    DateTime?
+  status        String   @default("ACTIVE")
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("care_plans")
+}
+
+model CareNote {
+  id          String    @id @default(cuid())
+  bookingId   String
+  booking     Booking   @relation(fields: [bookingId], references: [id])
+  caregiverId String
+  caregiver   Caregiver @relation(fields: [caregiverId], references: [id])
+  noteText    String
+  noteType    String    @default("GENERAL")
+  isSensitive Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@map("care_notes")
+}
+
+// ─── INCIDENTS ────────────────────────────────────────────────
+
+model Incident {
+  id           String           @id @default(cuid())
+  bookingId    String?
+  booking      Booking?         @relation(fields: [bookingId], references: [id])
+  reportedBy   String
+  caregiverId  String?
+  caregiver    Caregiver?       @relation(fields: [caregiverId], references: [id])
+  severity     IncidentSeverity @default(MEDIUM)
+  description  String
+  status       IncidentStatus   @default(OPEN)
+  resolvedBy   String?
+  resolvedAt   DateTime?
+  resolution   String?
+  attachments  String[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@map("incidents")
+}
+
+// ─── FINANCE ──────────────────────────────────────────────────
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  clientId      String
+  client        Client        @relation(fields: [clientId], references: [id])
+  bookingId     String?       @unique
+  booking       Booking?      @relation(fields: [bookingId], references: [id])
+  status        InvoiceStatus @default(DRAFT)
+  subtotal      Decimal       @db.Decimal(10, 2)
+  taxAmount     Decimal       @db.Decimal(10, 2) @default(0)
+  discountAmount Decimal      @db.Decimal(10, 2) @default(0)
+  totalAmount   Decimal       @db.Decimal(10, 2)
+  amountPaid    Decimal       @db.Decimal(10, 2) @default(0)
+  balance       Decimal       @db.Decimal(10, 2)
+  currency      String        @default("ETB")
+  dueDate       DateTime?
+  notes         String?
+  issuedAt      DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items         InvoiceItem[]
+  payments      Payment[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Decimal @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  totalPrice  Decimal @db.Decimal(10, 2)
+  discount    Decimal @db.Decimal(10, 2) @default(0)
+
+  @@map("invoice_items")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  invoiceId     String
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+  amount        Decimal       @db.Decimal(10, 2)
+  currency      String        @default("ETB")
+  paymentMethod String
+  status        PaymentStatus @default(PENDING)
+  reference     String?
+  notes         String?
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+
+  @@map("payments")
+}
+
+// ─── NOTIFICATIONS & MESSAGES ─────────────────────────────────
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  channel   NotificationChannel @default(IN_APP)
+  isRead    Boolean             @default(false)
+  metadata  Json?
+  sentAt    DateTime            @default(now())
+
+  @@map("notifications")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  recipientId String
+  recipient   User     @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  subject     String?
+  body        String
+  isRead      Boolean  @default(false)
+  sentAt      DateTime @default(now())
+
+  @@map("messages")
+}
+
+// ─── AUDIT LOG ────────────────────────────────────────────────
+
+model AuditLog {
+  id            String      @id @default(cuid())
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action        AuditAction
+  resourceType  String
+  resourceId    String?
+  ipAddress     String?
+  userAgent     String?
+  previousValue Json?
+  newValue      Json?
+  metadata      Json?
+  createdAt     DateTime    @default(now())
+
+  @@map("audit_logs")
+}
+
+// ─── SYSTEM SETTINGS ──────────────────────────────────────────
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  group     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
