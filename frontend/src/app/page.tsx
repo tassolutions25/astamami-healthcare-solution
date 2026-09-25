@@ -17,10 +17,61 @@ const stats = [
 
 
 
-const portals = [
-  { title: 'Care Coordinator Console', role: 'ADMIN / COORDINATOR', desc: 'Match patients with qualified nurses, track GPS clock-ins, review incident logs, and oversee billing.', href: '/admin/dashboard', cta: 'Open Admin Console', gradient: 'from-blue-700 to-teal-700' },
-  { title: 'Client & Family Portal', role: 'PATIENTS & SPONSORS', desc: 'Track care schedules, review daily visit notes from nurses, view clinical vitals, and settle invoices.', href: '/client/dashboard', cta: 'Access Client Portal', gradient: 'from-teal-600 to-emerald-700' },
-  { title: 'Caregiver & Nurse Hub', role: 'VERIFIED CAREGIVERS', desc: 'View scheduled shifts, clock-in with GPS verification, log clinical vitals, and submit daily notes.', href: '/caregiver/dashboard', cta: 'Caregiver Workspace', gradient: 'from-indigo-600 to-blue-700' },
+const portalItems = [
+  {
+    title: 'Care Coordinator',
+    desc: 'Match nurses, track GPS clock-ins & oversee clinical triage',
+    cta: 'Open Console',
+    href: '/admin/dashboard',
+    icon: (
+      <svg className="w-8 h-8 text-teal-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.5 3h15a1.5 1.5 0 0 1 1.5 1.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 15.5v-11A1.5 1.5 0 0 1 4.5 3z" />
+        <path d="M8 21h8" />
+        <path d="M12 17v4" />
+        <path d="m7 9 3 3 2-2 5 5" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Client & Family',
+    desc: 'Review care visits, track vitals & settle invoices with ease',
+    cta: 'Access Portal',
+    href: '/client/dashboard',
+    icon: (
+      <svg className="w-8 h-8 text-teal-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+        <path d="M12 5v4" />
+        <path d="M10 7h4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Caregiver & Nurse',
+    desc: 'View shifts, clock-in with GPS & submit daily patient notes',
+    cta: 'Caregiver Hub',
+    href: '/caregiver/dashboard',
+    icon: (
+      <svg className="w-8 h-8 text-teal-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M19 8v6" />
+        <path d="M16 11h6" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Diaspora Sponsors',
+    desc: 'Transparent care oversight & direct remote patient funding',
+    cta: 'Sponsor Care',
+    href: ROUTES.REGISTER,
+    icon: (
+      <svg className="w-8 h-8 text-teal-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+        <path d="M2 12h20" />
+      </svg>
+    ),
+  },
 ];
 
 export default function HomePage() {
@@ -28,8 +79,8 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
       <Navbar />
 
-      {/* HERO - full-bleed image with dark overlay */}
-      <section className="relative flex items-center justify-center overflow-hidden">
+      {/* HERO - full-bleed image with default 640px height and refined overlay */}
+      <section className="relative w-full h-[580px] flex items-center overflow-hidden">
         <Image
           src="/images/caregiver_elderly_care_dark_1790232034597.jpg"
           alt="Astamami caregiver assisting elderly client at home"
@@ -37,53 +88,65 @@ export default function HomePage() {
           priority
           className="object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-900/70 to-slate-900/30" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-20">
+        {/* Cinematic gradient overlay — clear visibility of caregiver while preserving text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-black/20" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center mt-8 gap-2 px-4 py-1.5 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-300 text-xs font-bold uppercase tracking-widest mb-8 backdrop-blur-sm">
-              <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+            {/* Pill Tag */}
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 mt-20 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-teal-300 text-xs font-semibold tracking-wider uppercase">
+              <span className="w-2 h-2 rounded-full bg-teal-400" />
               Ethiopia's Premier Home Healthcare Network
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6">
-              Compassionate Care{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-emerald-400">
-                In the Comfort of Home
-              </span>
-            </h1>
-            <p className="text-lg sm:text-xl text-slate-300 mb-6 leading-relaxed">
-              Astamami connects Ethiopian families and diaspora sponsors with certified nurses,
-              professional caregivers, and personalized medical care plans — with full transparency and peace of mind.
-            </p>
-            <div className="flex flex-wrap items-center gap-4">
+
+            {/* Headline - refined typography without gaudy gradients */}
+            <div>
+              <div className='w-3/4'>
+                <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-extrabold text-white tracking-tight leading-[1.14] mb-12 mt-8">
+                  Compassionate Care,{' '}
+                  <span className="text-teal-400 font-bold block sm:inline">
+                    In the Comfort of Home
+                  </span>
+                </h1>
+              </div>
+              <div className='w-1/4'>
+
+              </div>
+            </div>
+
+
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center gap-4 mb-8 mt-8">
               <Link href={ROUTES.REGISTER}>
-                <Button size="lg" variant="primary">Request Care Assessment →</Button>
+                <Button size="lg" variant="primary" className="shadow-lg shadow-teal-950/50">
+                  Request Care Assessment →
+                </Button>
               </Link>
               <Link href="#about">
-                <button className="px-6 py-3 rounded-xl border border-white/30 text-white font-semibold text-sm hover:bg-white/10 transition-all backdrop-blur-sm">
+                <button className="px-6 py-3 rounded-xl border border-white/20 bg-white/10 text-white font-semibold text-sm hover:bg-white/20 transition-all backdrop-blur-md cursor-pointer">
                   Learn More
                 </button>
               </Link>
             </div>
-            <div className="mt-16 flex flex-wrap gap-8">
+
+            {/* Key Metrics Strip */}
+            <div className="pt-6 border-t border-white/15 flex flex-wrap gap-8 sm:gap-12">
               {stats.map((s) => (
                 <div key={s.label}>
-                  <p className="text-3xl font-extrabold text-teal-300">{s.value}</p>
-                  <p className="text-sm text-slate-400 mt-0.5">{s.label}</p>
+                  <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{s.value}</p>
+                  <p className="text-xs text-slate-300 font-medium mt-0.5">{s.label}</p>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-white/50 text-xs">
-          <span>Scroll to explore</span>
-          <div className="w-px h-8 bg-white/30 animate-pulse" />
         </div>
       </section>
 
       <ServiceCarousel />
 
       {/* ABOUT - 3-column layout matching reference design */}
-      <section id="about" className="py-24 bg-white overflow-hidden">
+      <section id="about" className="py-16 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
 
@@ -207,35 +270,48 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* PORTALS */}
-      <section id="portals" className="py-24 bg-white">
+      {/* PORTALS RIBBON - sleek horizontal dark banner matching reference design */}
+      <section id="portals" className="py-16 sm:py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <p className="text-xs font-bold uppercase tracking-widest text-teal-600 mb-3">Integrated Multi-Stakeholder Platform</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">Built for Families, Clinicians & Operations</h2>
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <p className="text-xs font-bold uppercase tracking-widest text-teal-600 mb-2">Integrated Platform</p>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">Built for Families, Clinicians & Operations</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {portals.map((p) => (
-              <div key={p.title} className="rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
-                <div className={`p-8 bg-gradient-to-br ${p.gradient} text-white`}>
-                  <span className="text-xs font-bold tracking-widest uppercase opacity-80 block mb-2">{p.role}</span>
-                  <h3 className="text-xl font-extrabold">{p.title}</h3>
-                </div>
-                <div className="p-6 flex-1 flex flex-col justify-between bg-white">
-                  <p className="text-sm text-slate-600 leading-relaxed mb-6">{p.desc}</p>
-                  <Link href={p.href} className="block">
-                    <Button variant="outline" className="w-full">{p.cta} →</Button>
-                  </Link>
-                </div>
-              </div>
-            ))}
+
+          {/* Dark Ribbon Capsule Bar */}
+          <div className="bg-[#072421] border border-teal-800/40 rounded-2xl lg:rounded-3xl shadow-xl shadow-teal-950/20 overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-teal-800/30">
+              {portalItems.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className="group p-6 lg:py-7 lg:px-6 flex items-start gap-4 hover:bg-white/[0.04] transition-all duration-200"
+                >
+                  <div className="p-2.5 rounded-xl bg-teal-900/40 border border-teal-700/30 text-teal-200 group-hover:text-white group-hover:border-teal-500/50 transition-colors flex-shrink-0">
+                    {item.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-white font-bold text-sm sm:text-base tracking-tight leading-snug group-hover:text-teal-200 transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-slate-300/80 text-xs leading-relaxed mt-1 line-clamp-2">
+                      {item.desc}
+                    </p>
+                    <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-teal-300 group-hover:text-teal-100 underline underline-offset-4 decoration-teal-400/40 group-hover:decoration-teal-200 transition-all">
+                      <span>{item.cta}</span>
+                      <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA BANNER */}
       <section className="relative overflow-hidden bg-slate-900">
-        <div className="relative h-[380px]">
+        <div className="relative h-[400px]">
           <Image
             src="/images/caregiver_elderly_care_1790231935832.jpg"
             alt="Professional caregiver ready to serve your family"

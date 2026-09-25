@@ -209,10 +209,10 @@ export const ServiceCarousel: React.FC = () => {
   };
 
   return (
-    <section id="services" className="py-24 bg-white overflow-hidden">
+    <section id="services" className="py-12 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
+        <div className="text-center max-w-2xl mx-auto mb-6">
           <p className="text-xs font-bold uppercase tracking-widest text-teal-600 mb-3">
             Comprehensive Care Programs
           </p>
@@ -284,8 +284,8 @@ export const ServiceCarousel: React.FC = () => {
                   {/* Badge */}
                   <span
                     className={`mt-2 text-xs font-semibold px-3 py-0.5 rounded-full border transition-all duration-300 ${isHovered
-                        ? 'bg-teal-600 text-white border-teal-600'
-                        : 'bg-teal-50 text-teal-700 border-teal-100'
+                      ? 'bg-teal-600 text-white border-teal-600'
+                      : 'bg-teal-50 text-teal-700 border-teal-100'
                       }`}
                   >
                     {s.badge}
@@ -314,8 +314,8 @@ export const ServiceCarousel: React.FC = () => {
               key={i}
               onClick={() => { setCurrent(i); resetTimer(); }}
               className={`rounded-full transition-all duration-300 ${i === current
-                  ? 'w-6 h-2.5 bg-teal-600'
-                  : 'w-2.5 h-2.5 bg-slate-300 hover:bg-slate-400'
+                ? 'w-6 h-2.5 bg-teal-600'
+                : 'w-2.5 h-2.5 bg-slate-300 hover:bg-slate-400'
                 }`}
               aria-label={`Go to slide ${i + 1}`}
             />
