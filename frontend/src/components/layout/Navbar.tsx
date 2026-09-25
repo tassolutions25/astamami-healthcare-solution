@@ -1,41 +1,58 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
 import { ROUTES } from '../../lib/constants/routes';
 
 export const Navbar: React.FC = () => {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <header
+      className={`fixed top-0 z-50 w-full transition-all duration-300 ${scrolled
+          ? 'bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm'
+          : 'bg-transparent border-b border-transparent'
+        }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-700 to-emerald-500 flex items-center justify-center text-white font-bold text-xl shadow-md">
             A
           </div>
           <div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight block">
+            <span className={`text-xl font-bold tracking-tight block transition-colors duration-300 ${scrolled ? 'text-slate-900' : 'text-white'}`}>
               Astamami
             </span>
-            <span className="text-xs text-teal-700 font-semibold tracking-wider uppercase block">
+            <span className={`text-xs font-semibold tracking-wider uppercase block transition-colors duration-300 ${scrolled ? 'text-teal-700' : 'text-teal-300'}`}>
               Care Alliance
             </span>
           </div>
         </Link>
 
         {/* Nav Links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-          <Link href="#services" className="hover:text-teal-700 transition-colors">
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+          <Link href="#services" className={`hover:text-teal-400 transition-colors duration-300 ${scrolled ? 'text-slate-600' : 'text-white/90'}`}>
             Care Services
           </Link>
-          <Link href="#how-it-works" className="hover:text-teal-700 transition-colors">
+          <Link href="#how-it-works" className={`hover:text-teal-400 transition-colors duration-300 ${scrolled ? 'text-slate-600' : 'text-white/90'}`}>
             How It Works
           </Link>
-          <Link href="#about" className="hover:text-teal-700 transition-colors">
+          <Link href="#about" className={`hover:text-teal-400 transition-colors duration-300 ${scrolled ? 'text-slate-600' : 'text-white/90'}`}>
             Clinical Standards
           </Link>
-          <Link href={ROUTES.ADMIN.DASHBOARD} className="hover:text-teal-700 text-xs uppercase px-2 py-1 bg-slate-100 rounded text-slate-700 font-semibold">
+          <Link
+            href={ROUTES.ADMIN.DASHBOARD}
+            className={`text-xs uppercase px-2 py-1 rounded font-semibold transition-all duration-300 ${scrolled ? 'bg-slate-100 text-slate-700 hover:text-teal-700' : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+          >
             Admin Portal
           </Link>
         </nav>
@@ -43,9 +60,10 @@ export const Navbar: React.FC = () => {
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
           <Link href={ROUTES.LOGIN}>
-            <Button variant="ghost" size="md">
+            <button className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${scrolled ? 'text-slate-700 hover:bg-slate-100' : 'text-white hover:bg-white/10'
+              }`}>
               Sign In
-            </Button>
+            </button>
           </Link>
           <Link href={ROUTES.REGISTER}>
             <Button variant="primary" size="md">
